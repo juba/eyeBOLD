@@ -37,6 +37,8 @@ async function runQuery() {
   statusEl.textContent = "Running query...";
 
   const currentState = getCurrentQueryState();
+  console.log("currentState")
+  console.log(currentState)
 
   try {
     const res = await fetch("/api/build_query", {
@@ -172,14 +174,29 @@ function getTaxonomyState() {
   return taxo;
 }
 
+function getSelectedBoundingBoxes() {
+  // returns an array of {minLat, minLng, maxLat, maxLng}
+  return Array.from(selectedCells.values()).map(v => {
+    const bounds = v.bounds;
+    return {
+      minLat: bounds.getSouth(),
+      minLng: bounds.getWest(),
+      maxLat: bounds.getNorth(),
+      maxLng: bounds.getEast()
+    };
+  });
+}
+
 function getCurrentQueryState() {
 
   const taxonomy = getTaxonomyState();
-
+  
+  // --- Max rank source ---
+  const max_rank_source = document.getElementById("taxonomy-source-dropdown")?.dataset.source || "gbif";
+  console.log("AAAAAAAAAAAAAAA")
   // --- Max rank selected ---
   const rankBtn = document.querySelector("#rank-selector button.active");
   const identification_rank = rankBtn?.dataset.rank || null;
-
 
   // --- Countries ---
   const countries = Array.from(document.querySelectorAll(".geo-country:checked"))
@@ -188,6 +205,9 @@ function getCurrentQueryState() {
   // --- Climates ---
   const climates = Array.from(document.querySelectorAll(".geo-climate:checked"))
     .map(cb => cb.value);
+
+  //selected Bounding boxes (if any)
+  const boundingBoxes = getSelectedBoundingBoxes(); // NEW
 
   // --- Sequence options ---
   const seqRadio = document.querySelector("input[name='seqType']:checked");
@@ -208,11 +228,14 @@ function getCurrentQueryState() {
     checkedLocationsOnly: document.getElementById("optCheckedLoc")?.checked || false
   };
 
+
   return {
     taxonomy,
+    max_rank_source,
     identification_rank,
     countries,
     climates,
+    boundingBoxes,
     sequence: {
       type: seqType,
       primers: primers

@@ -51,3 +51,14 @@ CREATE INDEX IF NOT EXISTS idx_taxon_class_family ON specimen(taxon_class, taxon
 - [ ] Add continent info somewhere to help organize countries better
 - [ ] Add search bar for taxo
 
+## SPATIAL DATA: what to do
+
+We chose for easy request of points in cell boxes to use a simple R-tree for storing efficiently the lat lon coordinates of points. 
+It is very efficient for 700000 points. Let's see later for other solutions? 
+
+R-tree construction is done with the script in: `script/build_rtree_index.py`
+
+It creates a new table: species_rtree that will be used for the sql requests. 
+
+
+

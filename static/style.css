@@ -159,3 +159,8 @@ input[type="checkbox"].form-check-input:indeterminate::after {
   height: 500px;
   width: 100%;
 }
+
+#taxonomy-source-dropdown {
+  color: rgb(183 112 32);
+}
+

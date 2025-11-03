@@ -42,7 +42,19 @@
           <span id="taxonomy-counter" class="text-muted" style="font-size: small;"></span>
         </span>
         <div class="d-flex align-items-center">
-          <label class="form-label fw-semibold mb-0 me-2 small">Max rank retrieved:</label>
+          <label class="form-label fw-semibold mb-0 me-2 small">
+            Max rank retrieved (based on 
+            <span class="dropdown">
+              <a class="dropdown-toggle text-decoration-none" href="#" role="button" id="taxonomy-source-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                gbif
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="taxonomy-source-dropdown">
+                <li><a class="dropdown-item" href="#" data-source="gbif">gbif</a></li>
+                <li><a class="dropdown-item" href="#" data-source="bold">bold</a></li>
+              </ul>
+            </span>
+            )
+          </label>
           <div id="rank-selector" class="btn-group btn-group-sm" role="group" aria-label="Rank selector">
             <button type="button" class="btn btn-outline-dark btn-sm" data-rank="phylum">Phylum</button>
             <button type="button" class="btn btn-outline-dark btn-sm" data-rank="class">Class</button>
@@ -129,7 +141,7 @@
               </div>
               <div class="col">
                 <select class="form-select form-select-sm" id="forwardPrimer" disabled>
-                  <option value="GGDACWGGWTGAACWGTWTAYCCHCC" selected>GGDACWGGWTGAACWGTWTAYCCHCC</option>
+                  <option value="fwhF2" selected>fwhF2</option>
                   <option value="F2" disabled>not implemented yet</option>
                 </select>
               </div>
@@ -138,7 +150,7 @@
               </div>
               <div class="col">
                 <select class="form-select form-select-sm" id="reversePrimer" disabled>
-                  <option value="CCWGTWYTAGCHGGDGCWATYAC" selected>CCWGTWYTAGCHGGDGCWATYAC</option>
+                  <option value="fwhR2n" selected>fwhR2n</option>
                   <option value="R2" disabled>R2</option>
                 </select>
               </div>
@@ -166,7 +178,7 @@
             </div>
 
             <div class="form-check mb-2">
-              <input class="form-check-input" type="checkbox" id="optCheckedLoc" checked>
+              <input class="form-check-input" type="checkbox" id="optCheckedLoc">
               <label class="form-check-label" for="optCheckedLoc">Checked locations only</label>
             </div>
 

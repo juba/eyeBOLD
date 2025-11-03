@@ -177,21 +177,30 @@ document.addEventListener("DOMContentLoaded", async () => {
   // --- Update counters ---
   const counterSpan = document.getElementById("geography-counter");
   function updateGeographyCounter() {
+    console.log("Updating geography counter...");
     const selectedCountries = countriesContainer.querySelectorAll("input.geo-country:checked").length;
     const selectedClimates = climatesContainer.querySelectorAll("input.geo-climate:checked").length;
+    const selectedCellsCount = window.getSelectedCellsCount ? window.getSelectedCellsCount() : 0;
 
     let parts = [];
     if (selectedCountries) parts.push(`${selectedCountries} ${selectedCountries === 1 ? "country" : "countries"}`);
     if (selectedClimates) parts.push(`${selectedClimates} ${selectedClimates === 1 ? "climate" : "climates"}`);
+    if (selectedCellsCount) parts.push(`${selectedCellsCount} ${selectedCellsCount === 1 ? "map cell" : "map cells"}`);
 
     counterSpan.textContent = parts.length ? `(${parts.join(", ")} selected)` : ``;
   }
+
+  window.updateGeographyCounter = updateGeographyCounter;
 
   document.addEventListener("change", (e) => {
     if (e.target.closest("#countries-container") || e.target.closest("#climates-container")) {
       updateGeographyCounter();
     }
   });
+
+  // Update whenever map selection changes
+  map.on('click', () => updateGeographyCounter());
+
 
   updateGeographyCounter();
 });

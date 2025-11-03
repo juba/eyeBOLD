@@ -16,6 +16,7 @@ hoverRect.setStyle({ opacity: 0, fillOpacity: 0 });
 
 // --- Selection management ---
 const selectedCells = new Map(); // key -> { rect, bounds }
+let selectionZoom = null; // current zoom level of selected cells
 
 // --- Custom Grid Layer ---
 const SquareGrid = L.GridLayer.extend({
@@ -84,18 +85,80 @@ map.on('movestart', function() {
   hoverRect.setStyle({ opacity: 0, fillOpacity: 0 });
 });
 
+// --- Shift key visual feedback ---
+map.getContainer().addEventListener('keydown', e => {
+  if (e.key === 'Shift') map.getContainer().style.cursor = 'copy';
+});
+map.getContainer().addEventListener('keyup', e => {
+  if (e.key === 'Shift') map.getContainer().style.cursor = '';
+});
+
+// --- Message display ---
+function showMessage(msg, duration = 2500) {
+  const container = map.getContainer(); // append inside map
+  let div = document.getElementById('selection-msg');
+  if (!div) {
+    div = document.createElement('div');
+    div.id = 'selection-msg';
+    div.style.position = 'absolute';
+    div.style.top = '10px';
+    div.style.left = '50%';
+    div.style.transform = 'translateX(-50%)';
+    div.style.padding = '8px 12px';
+    div.style.backgroundColor = 'rgba(0,0,0,0.7)';
+    div.style.color = 'white';
+    div.style.fontSize = '14px';
+    div.style.borderRadius = '5px';
+    div.style.zIndex = 1000;
+    div.style.pointerEvents = 'none';
+    container.appendChild(div);
+  }
+  div.textContent = msg;
+  div.style.display = 'block';
+  clearTimeout(div._timeout);
+  div._timeout = setTimeout(() => { div.style.display = 'none'; }, duration);
+}
 // --- Click selection ---
 map.on('click', function(e) {
   const cell = getCellBounds(e.latlng);
   const key = getCellKey(cell.zoom, cell.tileX, cell.tileY, cell.subX, cell.subY);
   const shiftPressed = e.originalEvent.shiftKey;
 
-  if (!shiftPressed) {
-    selectedCells.forEach(entry => entry.rect.remove());
-    selectedCells.clear();
+  // --- Check if clicked cell is already selected ---
+  if (selectedCells.has(key)) {
+    // Remove selection
+    selectedCells.get(key).rect.remove();
+    selectedCells.delete(key);
+
+    // Reset zoom tracker if no cells remain
+    if (selectedCells.size === 0) selectionZoom = null;
+
+    // Update geography counter
+    updateGeographyCounter();
+
+    return; // stop further logic
   }
 
-  // Use geographic bounds as persistence key
+  if (!shiftPressed) {
+    // single selection mode
+    selectedCells.forEach(entry => entry.rect.remove());
+    selectedCells.clear();
+    selectionZoom = cell.zoom;
+  } else {
+    // shift multi-selection mode
+    if (selectionZoom !== null && cell.zoom !== selectionZoom) {
+      // clicked cell is at a different zoom -> show message and clear
+      showMessage('Selection reset: multi-cell selection can only include cells at the same zoom level.');
+      selectedCells.forEach(entry => entry.rect.remove());
+      selectedCells.clear();
+      selectionZoom = cell.zoom;
+    } else if (selectionZoom === null) {
+      // first selection with shift
+      selectionZoom = cell.zoom;
+    }
+  }
+
+  // toggle selection
   const existing = Array.from(selectedCells.entries()).find(([_, v]) =>
     v.bounds.equals(cell.bounds)
   );
@@ -103,6 +166,7 @@ map.on('click', function(e) {
   if (existing) {
     existing[1].rect.remove();
     selectedCells.delete(existing[0]);
+    if (selectedCells.size === 0) selectionZoom = null;
   } else {
     const rect = L.rectangle(cell.bounds, {
       color: '#21588f',
@@ -121,16 +185,14 @@ map.on('zoomend moveend', function() {
   });
 });
 
-// --- Shift key visual feedback ---
-map.getContainer().addEventListener('keydown', e => {
-  if (e.key === 'Shift') map.getContainer().style.cursor = 'copy';
-});
-map.getContainer().addEventListener('keyup', e => {
-  if (e.key === 'Shift') map.getContainer().style.cursor = '';
-});
-
 // --- Export selected bounds ---
 function getSelectedBounds() {
   return Array.from(selectedCells.values()).map(v => v.bounds);
 }
 window.getSelectedBounds = getSelectedBounds; // accessible from console
+
+// Expose number of selected cells globally
+function getSelectedCellsCount() {
+  return selectedCells.size;
+}
+window.getSelectedCellsCount = getSelectedCellsCount;

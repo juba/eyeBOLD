@@ -1,6 +1,23 @@
 // taxonomy.js — fixed layout with arrows inline, Bootstrap checkboxes, sorted children
 
 document.addEventListener("DOMContentLoaded", async () => {
+
+  // Dropdown click gbif or bold
+  let selectedSource = "gbif"; // default
+  const toggle = document.getElementById("taxonomy-source-dropdown");
+  const items = document.querySelectorAll("#taxonomy-source-dropdown + .dropdown-menu a");
+  items.forEach(item => {
+    item.addEventListener("click", (e) => {
+      e.preventDefault();
+      selectedSource = item.dataset.source;
+      toggle.textContent = item.textContent;      // e.g., "GBIF" or "BOLD" nicely formatted
+      toggle.dataset.source = selectedSource;     // clean value: "gbif" or "bold"
+      // Optional: visually mark active item in dropdown
+      items.forEach(i => i.classList.remove("active"));
+      item.classList.add("active");
+    });
+  });
+
   // --- Rank selector ---
   let selectedRank = "species"; // default
   const rankButtons = document.querySelectorAll("#rank-selector button");
