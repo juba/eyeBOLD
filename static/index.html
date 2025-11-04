@@ -25,6 +25,7 @@
         <a class="nav-link" href="https://github.com/damiendevienne/eyeBOLD/" target="_blank">Code on GitHub</a>
         <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#citationModal">Citation</a>
         <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#licenseModal">License</a>
+        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#helpModal">Help</a>
       </div>
     </div>
   </nav>
@@ -38,22 +39,22 @@
     <div class="card mb-3">
       <div class="card-header fw-bold d-flex align-items-center justify-content-between">
         <span>
-          Taxonomy
+          Taxonomy <small>(source: 
+          <span class="dropdown">
+            <a class="dropdown-toggle text-decoration-none" href="#" role="button" id="taxonomy-source-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+              gbif
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="taxonomy-source-dropdown">
+              <li><a class="dropdown-item" href="#" data-source="gbif">gbif</a></li>
+              <li><a class="dropdown-item" href="#" data-source="bold">bold</a></li>
+            </ul>
+          </span>
+          ) </small>
           <span id="taxonomy-counter" class="text-muted" style="font-size: small;"></span>
         </span>
         <div class="d-flex align-items-center">
           <label class="form-label fw-semibold mb-0 me-2 small">
-            Max rank retrieved (based on 
-            <span class="dropdown">
-              <a class="dropdown-toggle text-decoration-none" href="#" role="button" id="taxonomy-source-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                gbif
-              </a>
-              <ul class="dropdown-menu" aria-labelledby="taxonomy-source-dropdown">
-                <li><a class="dropdown-item" href="#" data-source="gbif">gbif</a></li>
-                <li><a class="dropdown-item" href="#" data-source="bold">bold</a></li>
-              </ul>
-            </span>
-            )
+            Max rank retrieved
           </label>
           <div id="rank-selector" class="btn-group btn-group-sm" role="group" aria-label="Rank selector">
             <button type="button" class="btn btn-outline-dark btn-sm" data-rank="phylum">Phylum</button>
@@ -314,6 +315,24 @@
       </div>
     </div>
 
+    <!-- Help Modal -->
+    <div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-light text-dark">
+            <h5 class="modal-title" id="helpModalLabel">Help</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <b>write</b> here all information to help users use the interface 
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
 
     <div id="export-overlay">
       Exporting... 
