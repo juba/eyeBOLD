@@ -15,32 +15,21 @@ CREATE INDEX IF NOT EXISTS idx_taxon_phylum       ON specimen(taxon_phylum);
 CREATE INDEX IF NOT EXISTS idx_taxon_class        ON specimen(taxon_class);
 CREATE INDEX IF NOT EXISTS idx_taxon_order        ON specimen(taxon_order);
 CREATE INDEX IF NOT EXISTS idx_taxon_family       ON specimen(taxon_family);
-CREATE INDEX IF NOT EXISTS idx_taxon_subfamily    ON specimen(taxon_subfamily);
-CREATE INDEX IF NOT EXISTS idx_taxon_tribe        ON specimen(taxon_tribe);
 CREATE INDEX IF NOT EXISTS idx_taxon_genus        ON specimen(taxon_genus);
 CREATE INDEX IF NOT EXISTS idx_taxon_species      ON specimen(taxon_species);
-CREATE INDEX IF NOT EXISTS idx_taxon_subspecies   ON specimen(taxon_subspecies);
 
 -- === Identification rank ===
 CREATE INDEX IF NOT EXISTS idx_identification_rank ON specimen(identification_rank);
 
--- === Country filter ===
-CREATE INDEX IF NOT EXISTS idx_country_iso ON specimen(country_iso);
-
--- === Climate join ===
-CREATE INDEX IF NOT EXISTS idx_climate_taxonkey ON climate_data(taxon_key);
-
--- === Checks bitmask (used in filters like ((checks >> 2) & 1) = 0) ===
--- Bitwise operations are not indexable, so no index helps here.
-
 -- === Specimen join for primer pairs ===
-CREATE INDEX IF NOT EXISTS idx_primer_specimen_id ON primer_pairs(specimen_id);
+CREATE INDEX IF NOT EXISTS idx_primer_specimen_id ON primer_pairs(specimenid);
 CREATE INDEX IF NOT EXISTS idx_primer_forward_match ON primer_pairs(forward_match_id);
 CREATE INDEX IF NOT EXISTS idx_primer_reverse_match ON primer_pairs(reverse_match_id);
 
--- Optional composite indexes (these can greatly help on big datasets)
-CREATE INDEX IF NOT EXISTS idx_rank_country ON specimen(identification_rank, country_iso);
-CREATE INDEX IF NOT EXISTS idx_taxon_class_family ON specimen(taxon_class, taxon_family);
+-- === Countries and zones ===
+CREATE INDEX idx_species_countries_key_code ON species_countries(gbif_key, country_code);
+CREATE INDEX idx_species_zones_key_zone ON species_zones(gbif_key, zone);
+
 ```
 
 
