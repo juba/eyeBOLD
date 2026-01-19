@@ -10,7 +10,7 @@ import csv
 
 
 DATA_DIR = Path(__file__).parent / "data"
-DB_PATH = DATA_DIR / "my_small.db"
+DB_PATH = DATA_DIR / "Nov-7/final_bold_7_Nov.db"
 LINEAGE_JSON = DATA_DIR / "lineage_bold.json" # the taxonomy data
 COUNTRIES_CSV = DATA_DIR / "unique_countries.csv" # the taxonomy data
 
@@ -78,8 +78,8 @@ def build_sql_from_data(data, limit=None, return_count=False):
 
     metadata_cols = [
         "specimen.specimenid", "taxon_kingdom", "taxon_phylum", "taxon_class", "taxon_order",
-        "taxon_family", "taxon_subfamily", "taxon_tribe", "taxon_genus",
-        "taxon_species", "taxon_subspecies", "identification_rank"
+        "taxon_family", "taxon_genus",
+        "taxon_species", "identification_rank"
     ]
 
     filters = []
