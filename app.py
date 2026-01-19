@@ -12,7 +12,7 @@ import csv
 DATA_DIR = Path(__file__).parent / "data"
 DB_PATH = DATA_DIR / "Nov-7/final_bold_7_Nov.db"
 LINEAGE_JSON = DATA_DIR / "lineage_bold.json" # the taxonomy data
-COUNTRIES_CSV = DATA_DIR / "unique_countries.csv" # the taxonomy data
+COUNTRIES_CSV = DATA_DIR / "Nov-7/unique_countries_Nov-7.csv" # the taxonomy data
 
 app = FastAPI()
 
@@ -153,8 +153,8 @@ def build_sql_from_data(data, limit=None, return_count=False):
         join_clause = f"""
         JOIN primer_pairs p
           ON p.specimenid = specimen.specimenid
-         AND p.forward_match_id = specimen.specimenid || '_{fwd}'
-         AND p.reverse_match_id = specimen.specimenid || '_{rev}'
+         AND p.forward_match_id = '{fwd}'
+         AND p.reverse_match_id = '{rev}'
         """
         sequence_col = "p.inter_primer_sequence AS sequence"
     else:
