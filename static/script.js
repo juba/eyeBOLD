@@ -1,4 +1,5 @@
 let lastData = []; // store last query for export
+const MAX_DISPLAY_ROWS = 100000; // maximum number of rows to test for. If more rows than this numbers are t be returned by the query, it will be written: "More than 100000 rows found" instead of the actual number.
 
 async function runTest() {
   document.getElementById("status").textContent = "Building query...";

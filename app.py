@@ -40,7 +40,6 @@ def query_db(sql):
     con.close()
     return rows
 
-
 @app.get("/api/testdb")
 def test_db():
     try:
@@ -69,7 +68,12 @@ def get_countries_csv():
 # THIS FUNCTION BUILDS A SQL QUERY BASED ON FRONTEND INPUT SEND IN JSON FORMAT. COOL ####
 #########################################################################################
 
+# Maximum number of rows to fetch when probing total count
+MAX_COUNT_ROWS = 100_001        # query limit
+DISPLAY_COUNT_CAP = MAX_COUNT_ROWS - 1  # if more than this, show ">CAP"
+
 def build_sql_from_data(data, limit=None, return_count=False):
+  
     """
     Build optimized SQL query from frontend filters.
     Uses R-tree subquery for bounding boxes (fast).
@@ -190,9 +194,12 @@ def build_sql_from_data(data, limit=None, return_count=False):
     total_count = None
 
     if return_count:
-        count_sql = f"SELECT COUNT(DISTINCT specimen.specimenid) FROM specimen {join_clause} WHERE {where_clause};"
-        count_rows = query_db(count_sql)
-        total_count = count_rows[0][0] if count_rows else 0
+        count_sql = f"SELECT DISTINCT specimen.specimenid FROM specimen {join_clause} WHERE {where_clause} LIMIT {MAX_COUNT_ROWS};"
+        count_rows = len(query_db(count_sql))
+        if count_rows > DISPLAY_COUNT_CAP:
+          total_count = f">{DISPLAY_COUNT_CAP}"
+        else:
+          total_count = str(count_rows)
 
     return sql, rows, total_count
 
