@@ -1,7 +1,7 @@
 import sqlite3
 import time
 
-DB_FILE = "../data/Nov-7/final_bold_7_Nov.db"
+DB_FILE = "../data/final_bold_7_Nov.db"
 SRC_TABLE = "species_locations"          # your table with gbif_key, latitude, longitude
 RTREE_TABLE = "species_rtree"            # the R-tree index table name
 BATCH_SIZE = 500_000                     # rows per transaction

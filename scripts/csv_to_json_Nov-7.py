@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 import csv
 
-DATA_DIR = Path(__file__).parent / "../data/Nov-7"
+DATA_DIR = Path(__file__).parent / "../data"
 CSV_FILE = DATA_DIR / "specimen_taxa.lineage.ranks.file"
 JSON_FILE = DATA_DIR / "lineage_bold._Nov-7.json"
 

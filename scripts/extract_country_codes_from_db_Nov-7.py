@@ -1,8 +1,8 @@
 import sqlite3
 from pathlib import Path
 
-DB_FILE = "../data/Nov-7/final_bold_7_Nov.db"
-OUT_FILE = Path("../data/Nov-7/unique_countries_Nov-7.csv")
+DB_FILE = "../data/final_bold_7_Nov.db"
+OUT_FILE = Path("../data/unique_countries_Nov-7.csv")
 
 conn = sqlite3.connect(DB_FILE)
 cur = conn.cursor()
