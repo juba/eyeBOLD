@@ -1,4 +1,7 @@
 // geography.js
+
+import { continentMap, climateGroups } from './continentMap.js';
+
 document.addEventListener("DOMContentLoaded", async () => {
   const countriesContainer = document.getElementById("countries-container");
   const climatesContainer = document.getElementById("climates-container");
@@ -21,31 +24,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // --- Define continents ---
-  const continentMap = {
-    "Africa": ["DZ","AO","BF","BI","BJ","BW","CD","CF","CG","CI","CM","CV","DJ","EG","ER","ET","GA","GH","GM","GN","GQ","GW","KE","KM","LR","LS","LY","MA","MG","ML","MR","MU","MW","MZ","NA","NE","NG","RE","RW","SC","SD","SH","SL","SN","SO","SS","ST","SZ","TD","TG","TN","TZ","UG","YT","ZA","ZM","ZW"],
-    "Europe": ["AL","AM","AT","AX","BA","BE","BG","BY","CH","CY","CZ","DE","DK","EE","ES","FI","FO","FR","GB","GE","GI","GR","HR","HU","IE","IS","IT","LI","LT","LU","LV","MC","MD","ME","MK","MT","NL","NO","PL","PT","RO","RS","RU","SE","SI","SK","SM","UA","XK"],
-    "Asia": ["AE","AF","AZ","BD","BH","BN","BT","CN","HK","ID","IL","IN","IQ","IR","JO","JP","KG","KH","KP","KR","KW","KZ","LA","LB","LK","MM","MN","MO","MY","NP","OM","PH","PK","QA","SA","SG","SY","TH","TJ","TL","TM","TR","TW","UZ","VN","YE"],
-    "Oceania": ["AS","AU","CK","FJ","FM","GU","KI","MH","MP","NC","NF","NR","NU","NZ","PF","PG","PN","PW","SB","TK","TO","TV","UM","VU","WF","WS"],
-    "Americas": ["AG","AI","AR","AW","BB","BM","BO","BQ","BR","BS","BZ","CA","CL","CO","CR","CU","CW","DM","DO","EC","FK","GD","GF","GL","GP","GT","GY","HN","HT","JM","KN","KY","LC","MF","MQ","MS","MX","NI","PA","PE","PM","PR","PY","SR","SV","SX","TC","TT","US","UY","VC","VE","VG","VI"],
-    "Antarctica": ["AQ","TF","GS"]
-  };
+  // Extract all codes from continentMap
+  const allMappedCodes = new Set(Object.values(continentMap).flat().map(c => c.code));
+  const missingCountries = countries.filter(c => !allMappedCodes.has(c));
 
-  // --- “Unknown country” option ---
-  const unknownDiv = document.createElement("div");
-  unknownDiv.classList.add("continent-block");
-  unknownDiv.innerHTML = `
-    <input class="form-check-input geo-country" type="checkbox" value="UNKNOWN" id="country-unknown" style="margin-right: 6px;">
-    <label class="form-check-label fw-bold" for="country-unknown">Unknown country</label>
-  `;
-  countriesContainer.appendChild(unknownDiv);
-
+  if (missingCountries.length > 0) {
+    console.warn("Countries missing from continentMap:", missingCountries);
+  }
+  
   // --- Build collapsible continent UI ---
   for (const [continent, codes] of Object.entries(continentMap)) {
     const contDiv = document.createElement("div");
     contDiv.classList.add("continent-block");
-
-    const validCodes = codes.filter(code => countries.includes(code));
 
     // Arrow toggle
     const toggle = document.createElement("span");
@@ -81,11 +71,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     ul.style.marginLeft = "1.5em";
     ul.style.display = "none"; // collapsed by default
 
-    validCodes.forEach(code => {
+    // Sort countries alphabetically by name
+    const continentCountries = codes.sort((a, b) => a.name.localeCompare(b.name));
+
+    // Build the UI
+    continentCountries.forEach(c => {
       const li = document.createElement("li");
       li.innerHTML = `
-        <input class="form-check-input geo-country" type="checkbox" value="${code}" id="country-${code}">
-        <label class="form-check-label" for="country-${code}">${code}</label>
+        <input class="form-check-input geo-country" type="checkbox" value="${c.code}" id="country-${c.code}">
+        <label class="form-check-label" for="country-${c.code}">${c.name}</label>
       `;
       ul.appendChild(li);
     });
@@ -107,73 +101,75 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // --- Climate zones ---
-  const climatesBlock = climatesContainer.closest(".geo-block");
 
-  const climateGroups = {
-    "Tropical": ["Af", "Am", "Aw", "As"],
-    "Dry": ["BWh", "BWk", "BSh", "BSk"],
-    "Temperate": ["Cfa", "Cfb", "Cfc", "Csa", "Csb", "Csc", "Cwa", "Cwb", "Cwc"],
-    "Continental": ["Dfa", "Dfb", "Dfc", "Dfd", "Dsa", "Dsb", "Dsc", "Dsd", "Dwa", "Dwb", "Dwc", "Dwd"],
-    "Polar": ["ET", "EF"],
-    "Ocean": ["Ocean"]
-  };
+  // const climateGroups = {
+  //   "Tropical": ["Af", "Am", "Aw", "As"],
+  //   "Dry": ["BWh", "BWk", "BSh", "BSk"],
+  //   "Temperate": ["Cfa", "Cfb", "Cfc", "Csa", "Csb", "Csc", "Cwa", "Cwb", "Cwc"],
+  //   "Continental": ["Dfa", "Dfb", "Dfc", "Dfd", "Dsa", "Dsb", "Dsc", "Dsd", "Dwa", "Dwb", "Dwc", "Dwd"],
+  //   "Polar": ["ET", "EF"],
+  //   "Ocean": ["Ocean"]
+  // };
 
   for (const [groupName, climates] of Object.entries(climateGroups)) {
     const groupDiv = document.createElement("div");
     groupDiv.classList.add("climate-group");
-
+  
     const toggle = document.createElement("span");
     toggle.textContent = "►";
     toggle.style.cursor = "pointer";
     toggle.style.marginRight = "6px";
     toggle.style.userSelect = "none";
-
+  
     const label = document.createElement("label");
     label.classList.add("fw-bold");
     label.textContent = groupName;
-
+  
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
     checkbox.classList.add("form-check-input", "climate-group-checkbox");
     checkbox.style.marginRight = "6px";
-
+  
     const titleDiv = document.createElement("div");
     titleDiv.style.display = "flex";
     titleDiv.style.alignItems = "center";
     titleDiv.appendChild(toggle);
     titleDiv.appendChild(checkbox);
     titleDiv.appendChild(label);
-
+  
     groupDiv.appendChild(titleDiv);
-
+  
     const ul = document.createElement("ul");
     ul.style.listStyle = "none";
     ul.style.marginLeft = "1.5em";
     ul.style.display = "none";
-
-    climates.forEach(climate => {
+  
+    // --- Sort climates alphabetically by name ---
+    const sortedClimates = [...climates].sort((a, b) => a.name.localeCompare(b.name));
+  
+    sortedClimates.forEach(climate => {
       const li = document.createElement("li");
       li.innerHTML = `
-        <input class="form-check-input geo-climate" type="checkbox" value="${climate}" id="climate-${climate}">
-        <label class="form-check-label" for="climate-${climate}">${climate}</label>
+        <input class="form-check-input geo-climate" type="checkbox" value="${climate.code}" id="climate-${climate.code}">
+        <label class="form-check-label" for="climate-${climate.code}">${climate.name} (${climate.code})</label>
       `;
       ul.appendChild(li);
     });
-
+  
     groupDiv.appendChild(ul);
     climatesContainer.appendChild(groupDiv);
-
+  
     toggle.addEventListener("click", () => {
       const isHidden = ul.style.display === "none";
       ul.style.display = isHidden ? "block" : "none";
       toggle.textContent = isHidden ? "▼" : "►";
     });
-
+  
     checkbox.addEventListener("change", () => {
       ul.querySelectorAll("input.geo-climate").forEach(cb => (cb.checked = checkbox.checked));
     });
   }
-
+  
   // --- Update counters ---
   const counterSpan = document.getElementById("geography-counter");
   function updateGeographyCounter() {

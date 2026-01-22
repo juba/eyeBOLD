@@ -10,9 +10,9 @@ import csv
 
 
 DATA_DIR = Path(__file__).parent / "data"
-DB_PATH = DATA_DIR / "Nov-7/final_bold_7_Nov.db"
-LINEAGE_JSON = DATA_DIR / "lineage_bold.json" # the taxonomy data
-COUNTRIES_CSV = DATA_DIR / "Nov-7/unique_countries_Nov-7.csv" # the taxonomy data
+DB_PATH = DATA_DIR / "final_bold_7_Nov.db"
+LINEAGE_JSON = DATA_DIR / "lineage_bold._Nov-7.json" # the taxonomy data
+COUNTRIES_CSV = DATA_DIR / "unique_countries_Nov-7.csv" # the taxonomy data
 
 app = FastAPI()
 
@@ -54,9 +54,11 @@ def test_db():
 
 @app.get("/api/taxonomy_json")
 def get_taxonomy_json():
+    print("Serving taxonomy JSON file:", LINEAGE_JSON)
     if LINEAGE_JSON.exists():
         return FileResponse(LINEAGE_JSON, media_type="application/json", filename="lineage_bold.json")
     return {"error": "TAXONOMY JSON file not found"}
+
 
 @app.get("/api/countries_csv")
 def get_countries_csv():
@@ -69,25 +71,22 @@ def get_countries_csv():
 #########################################################################################
 
 # Maximum number of rows to fetch when probing total count
-MAX_COUNT_ROWS = 100_001        # query limit
+MAX_COUNT_ROWS = 10_001        # query limit
 DISPLAY_COUNT_CAP = MAX_COUNT_ROWS - 1  # if more than this, show ">CAP"
 
 def build_sql_from_data(data, limit=None, return_count=False):
-  
     """
     Build optimized SQL query from frontend filters.
-    Uses R-tree subquery for bounding boxes (fast).
-    Ensures DISTINCT specimen rows.
+    Places JOINs before WHERE for better performance.
     """
 
     metadata_cols = [
-        "specimen.specimenid", "taxon_kingdom", "taxon_phylum", "taxon_class", "taxon_order",
-        "taxon_family", "taxon_genus",
-        "taxon_species", "identification_rank"
+        "s.specimenid", "s.taxon_kingdom", "s.taxon_phylum", "s.taxon_class", "s.taxon_order",
+        "s.taxon_family", "s.taxon_genus", "s.taxon_species", "s.identification_rank"
     ]
 
-    filters = []
-    join_clause = ""
+    joins = []
+    where_conditions = []
 
     # === Taxonomy filters ===
     if data.get("taxonomy"):
@@ -98,32 +97,30 @@ def build_sql_from_data(data, limit=None, return_count=False):
         clauses = []
         for rank, names in taxa_by_rank.items():
             quoted = "', '".join(names)
-            clauses.append(f"taxon_{rank} IN ('{quoted}')")
-        filters.append("(" + " OR ".join(clauses) + ")")
+            clauses.append(f"s.taxon_{rank} IN ('{quoted}')")
+        where_conditions.append("(" + " OR ".join(clauses) + ")")
 
     # === Identification rank ===
     if data.get("identification_rank"):
         source = data.get("max_rank_source", "gbif")
         if source == "bold":
-            filters.append(f"identification_rank = '{data['identification_rank']}'")
+            where_conditions.append(f"s.identification_rank = '{data['identification_rank']}'")
         elif source == "gbif":
-            filters.append(f"gbif_rank = '{data['identification_rank']}'")
+            where_conditions.append(f"s.gbif_rank = '{data['identification_rank']}'")
 
-    # === Country filter ===
+    # === Country filter (JOIN) ===
     if data.get("countries"):
         countries = [c.upper() for c in data["countries"]]
         country_list = "', '".join(countries)
-        filters.append(
-            f"EXISTS (SELECT 1 FROM species_countries sc WHERE sc.gbif_key = specimen.gbif_key AND sc.country_code IN ('{country_list}'))"
-        )
+        joins.append(f"JOIN species_countries sc ON sc.gbif_key = s.gbif_key")
+        where_conditions.append(f"sc.country_code IN ('{country_list}')")
 
-    # === Climate filter ===
+    # === Climate filter (JOIN) ===
     if data.get("climates"):
         zones = [z.lower() for z in data["climates"]]
         zone_list = "', '".join(zones)
-        filters.append(
-            f"EXISTS (SELECT 1 FROM species_zones sz WHERE sz.gbif_key = specimen.gbif_key AND sz.zone IN ('{zone_list}'))"
-        )
+        joins.append(f"JOIN species_zones sz ON sz.gbif_key = s.gbif_key")
+        where_conditions.append(f"sz.zone IN ('{zone_list}')")
 
     # === Bounding boxes (R-tree optimized query) ===
     bounding_boxes = data.get("boundingBoxes", [])
@@ -138,52 +135,54 @@ def build_sql_from_data(data, limit=None, return_count=False):
                   AND maxY >= {minLat} AND minY <= {maxLat}
             """)
         combined_subquery = " UNION ALL ".join(subqueries)
-        filters.append(f"specimen.gbif_key IN ({combined_subquery})")
+        where_conditions.append(f"s.gbif_key IN ({combined_subquery})")
 
     # === Sequence type ===
     seq_type = data.get("sequence", {}).get("type", "primers")
     if seq_type == "raw":
-        sequence_col = "nuc_raw AS sequence"
+        sequence_col = "s.nuc_raw AS sequence"
     elif seq_type == "sanitized":
-        sequence_col = "nuc_san AS sequence"
+        sequence_col = "s.nuc_san AS sequence"
     elif seq_type == "primers":
         primers = data.get("sequence", {}).get("primers", {})
         fwd = primers.get("forward", "")
         rev = primers.get("reverse", "")
-        join_clause = f"""
+        joins.append(f"""
         JOIN primer_pairs p
-          ON p.specimenid = specimen.specimenid
-         AND p.forward_match_id = '{fwd}'
-         AND p.reverse_match_id = '{rev}'
-        """
+          ON p.specimenid = s.specimenid
+        """)
+        where_conditions.extend([
+            f"p.forward_match_id = '{fwd}'",
+            f"p.reverse_match_id = '{rev}'"
+        ])
         sequence_col = "p.inter_primer_sequence AS sequence"
     else:
-        sequence_col = "nuc_raw AS sequence"
+        sequence_col = "s.nuc_raw AS sequence"
 
     # === Binary flag filters ===
     options = data.get("options", {})
     if options.get("excludeDuplicates"):
-        filters.append("((checks >> 2) & 1) = 0")
+        where_conditions.append("((s.checks >> 2) & 1) = 0")
     if options.get("excludeShortLengths"):
-        filters.append("((checks >> 3) & 1) = 0")
+        where_conditions.append("((s.checks >> 3) & 1) = 0")
     if options.get("excludeMisclassified"):
-        filters.append("((checks >> 15) & 1) = 0")
+        where_conditions.append("((s.checks >> 15) & 1) = 0")
     if options.get("hybrids") == "hybrid":
-        filters.append("((checks >> 4) & 1) = 1")
+        where_conditions.append("((s.checks >> 4) & 1) = 1")
     elif options.get("hybrids") == "nohybrid":
-        filters.append("((checks >> 4) & 1) = 0")
+        where_conditions.append("((s.checks >> 4) & 1) = 0")
     if options.get("checkedLocationsOnly"):
-        filters.append("((checks >> 17) & 1) = 1")
+        where_conditions.append("((s.checks >> 17) & 1) = 1")
 
     # === Final WHERE clause ===
-    where_clause = " AND ".join(filters) if filters else "1=1"
+    where_clause = " AND ".join(where_conditions) if where_conditions else "1=1"
 
     # === Assemble SQL ===
     select_cols = metadata_cols + [sequence_col]
     sql = f"""
     SELECT DISTINCT {', '.join(select_cols)}
-    FROM specimen
-    {join_clause}
+    FROM specimen s
+    {' '.join(joins)}
     WHERE {where_clause}
     """
     if limit:
@@ -194,7 +193,13 @@ def build_sql_from_data(data, limit=None, return_count=False):
     total_count = None
 
     if return_count:
-        count_sql = f"SELECT DISTINCT specimen.specimenid FROM specimen {join_clause} WHERE {where_clause} LIMIT {MAX_COUNT_ROWS};"
+        count_sql = f"""
+        SELECT DISTINCT s.specimenid
+        FROM specimen s
+        {' '.join(joins)}
+        WHERE {where_clause}
+        LIMIT {MAX_COUNT_ROWS};
+        """
         count_rows = len(query_db(count_sql))
         if count_rows > DISPLAY_COUNT_CAP:
           total_count = f">{DISPLAY_COUNT_CAP}"
