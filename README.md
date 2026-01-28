@@ -1,7 +1,10 @@
 # eyeBOLD
 
+## What to do after having cloned this repo
+- run code to prepare taxonomy. This produces the file `data/lineage_bold._Nov-7.json`
+`python3 scripts/csv_to_json_Nov-7.py`
+
 ## Notes for development
-aaa
 To run the server simply type
 `uvicorn app:app --reload --port 8000`
 
