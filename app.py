@@ -88,6 +88,54 @@ def build_sql_from_data(data, limit=None, return_count=False):
     joins = []
     where_conditions = []
 
+    # === Identification rank === --> ALWAYS PRESENT
+    if data.get("identification_rank"):
+        source = data.get("max_rank_source", "gbif")
+        if source == "bold":
+            where_conditions.append(f"s.identification_rank = '{data['identification_rank']}'")
+        elif source == "gbif":
+            where_conditions.append(f"s.gbif_rank = '{data['identification_rank']}'")
+
+    # # === Binary flag filters === --> ALWAYS PRESENT --> WILL BE IN COMPSITE INDEX
+    # options = data.get("options", {})
+    # if options.get("excludeDuplicates"):
+    #     where_conditions.append("((s.checks >> 2) & 1) = 0")
+    # if options.get("excludeShortLengths"):
+    #     where_conditions.append("((s.checks >> 3) & 1) = 0")
+    # if options.get("excludeMisclassified"):
+    #     where_conditions.append("((s.checks >> 15) & 1) = 0")
+    # if options.get("hybrids") == "hybrid":
+    #     where_conditions.append("((s.checks >> 4) & 1) = 1")
+    # elif options.get("hybrids") == "nohybrid":
+    #     where_conditions.append("((s.checks >> 4) & 1) = 0")
+    # if options.get("checkedLocationsOnly"):
+    #     where_conditions.append("((s.checks >> 17) & 1) = 1")
+
+   # === Binary flag filters === --> ALWAYS PRESENT --> WILL BE IN COMPOSITE INDEX
+    options = data.get("options", {})
+    # excludeDuplicates
+    if options.get("excludeDuplicates"):
+        where_conditions.append("s.check_flag_2 = 0")
+    else:
+        where_conditions.append("s.check_flag_2 IN (0,1)")
+    # excludeShortLengths
+    if options.get("excludeShortLengths"):
+        where_conditions.append("s.check_flag_3 = 0")
+    else:
+        where_conditions.append("s.check_flag_3 IN (0,1)")
+    # hybrids (ternary)
+    if options.get("hybrids") == "hybrid":
+        where_conditions.append("s.check_flag_4 = 1")
+    elif options.get("hybrids") == "nohybrid":
+        where_conditions.append("s.check_flag_4 = 0")
+    else:
+        where_conditions.append("s.check_flag_4 IN (0,1)")
+    # excludeMisclassified
+    if options.get("excludeMisclassified"):
+        where_conditions.append("s.check_flag_15 = 0")
+    else:
+        where_conditions.append("s.check_flag_15 IN (0,1)")
+
     # === Taxonomy filters ===
     if data.get("taxonomy"):
         from collections import defaultdict
@@ -99,14 +147,6 @@ def build_sql_from_data(data, limit=None, return_count=False):
             quoted = "', '".join(names)
             clauses.append(f"s.taxon_{rank} IN ('{quoted}')")
         where_conditions.append("(" + " OR ".join(clauses) + ")")
-
-    # === Identification rank ===
-    if data.get("identification_rank"):
-        source = data.get("max_rank_source", "gbif")
-        if source == "bold":
-            where_conditions.append(f"s.identification_rank = '{data['identification_rank']}'")
-        elif source == "gbif":
-            where_conditions.append(f"s.gbif_rank = '{data['identification_rank']}'")
 
     # === Country filter (JOIN) ===
     if data.get("countries"):
@@ -159,20 +199,6 @@ def build_sql_from_data(data, limit=None, return_count=False):
     else:
         sequence_col = "s.nuc_raw AS sequence"
 
-    # === Binary flag filters ===
-    options = data.get("options", {})
-    if options.get("excludeDuplicates"):
-        where_conditions.append("((s.checks >> 2) & 1) = 0")
-    if options.get("excludeShortLengths"):
-        where_conditions.append("((s.checks >> 3) & 1) = 0")
-    if options.get("excludeMisclassified"):
-        where_conditions.append("((s.checks >> 15) & 1) = 0")
-    if options.get("hybrids") == "hybrid":
-        where_conditions.append("((s.checks >> 4) & 1) = 1")
-    elif options.get("hybrids") == "nohybrid":
-        where_conditions.append("((s.checks >> 4) & 1) = 0")
-    if options.get("checkedLocationsOnly"):
-        where_conditions.append("((s.checks >> 17) & 1) = 1")
 
     # === Final WHERE clause ===
     where_clause = " AND ".join(where_conditions) if where_conditions else "1=1"
