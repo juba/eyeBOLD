@@ -1,6 +1,6 @@
 // geography.js
 
-import { continentMap, climateGroups } from './continentMap.js';
+import { continentMap, climateGroups } from './country-and-climatezone-groups.js';
 
 document.addEventListener("DOMContentLoaded", async () => {
   const countriesContainer = document.getElementById("countries-container");
