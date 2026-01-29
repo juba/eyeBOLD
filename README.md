@@ -25,27 +25,27 @@ Indexing is needed for the GUI to be usable. Here is how it must be done:
 
 ```sql
 -- == COMPOSITE INDEXES FOR COLUMNS ALWAYS QUERIED TOGETHER AND IN THIS ORDER ==
-CREATE INDEX IF NOT EXISTS idx_specimen_kingdom_rank ON specimen (gbif_rank,check_flag_2,check_flag_3,check_flag_4,check_flag_15);
-CREATE INDEX IF NOT EXISTS idx_specimen_kingdom_rank ON specimen (identification_rank,check_flag_2,check_flag_3,check_flag_4,check_flag_15);
+CREATE INDEX idx_specimen_ident_rank ON specimen(identification_rank);
+CREATE INDEX idx_specimen_gbif_rank ON specimen(gbif_rank);
 
 -- == INDEX FOR TAXONOMY ==
-CREATE INDEX idx_taxon_kingdom ON specimen(taxon_kingdom);
-CREATE INDEX idx_taxon_phylum  ON specimen(taxon_phylum);
-CREATE INDEX idx_taxon_class   ON specimen(taxon_class);
-CREATE INDEX idx_taxon_order   ON specimen(taxon_order);
-CREATE INDEX idx_taxon_family  ON specimen(taxon_family);
-CREATE INDEX idx_taxon_genus   ON specimen(taxon_genus);
-CREATE INDEX idx_taxon_species ON specimen(taxon_species);
+CREATE INDEX IF NOT EXISTS idx_taxon_kingdom ON specimen(taxon_kingdom);
+CREATE INDEX IF NOT EXISTS idx_taxon_phylum  ON specimen(taxon_phylum);
+CREATE INDEX IF NOT EXISTS idx_taxon_class   ON specimen(taxon_class);
+CREATE INDEX IF NOT EXISTS idx_taxon_order   ON specimen(taxon_order);
+CREATE INDEX IF NOT EXISTS idx_taxon_family  ON specimen(taxon_family);
+CREATE INDEX IF NOT EXISTS idx_taxon_genus   ON specimen(taxon_genus);
+CREATE INDEX IF NOT EXISTS idx_taxon_species ON specimen(taxon_species);
 
 -- === Specimen join for primer pairs ===
 CREATE INDEX IF NOT EXISTS idx_primer_specimen_id ON primer_pairs(specimenid);
-CREATE INDEX IF NOT EXISTS idx_primer_forward_match ON primer_pairs(forward_match_id);
-CREATE INDEX IF NOT EXISTS idx_primer_reverse_match ON primer_pairs(reverse_match_id);
+CREATE INDEX IF NOT EXISTS idx_primer_forward_match ON primer_pairs(forward_match_id, reverse_match_id);
+CREATE INDEX IF NOT EXISTS idx_primer_specimen ON primer_pairs(specimenid);
+CREATE INDEX IF NOT EXISTS idx_primer_pair     ON primer_pairs(forward_match_id, reverse_match_id);
 
 -- === Countries and zones ===
-CREATE INDEX idx_species_countries_key_code ON species_countries(gbif_key, country_code);
-CREATE INDEX idx_species_zones_key_zone ON species_zones(gbif_key, zone);
-
+CREATE INDEX IF NOT EXISTS idx_species_countries_key_code ON species_countries(gbif_key, country_code);
+CREATE INDEX IF NOT EXISTS idx_species_zones_key_zone ON species_zones(gbif_key, zone);
 ```
 
 ```sql

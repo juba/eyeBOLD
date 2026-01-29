@@ -111,31 +111,6 @@ def build_sql_from_data(data, limit=None, return_count=False):
     # if options.get("checkedLocationsOnly"):
     #     where_conditions.append("((s.checks >> 17) & 1) = 1")
 
-   # === Binary flag filters === --> ALWAYS PRESENT --> WILL BE IN COMPOSITE INDEX
-    options = data.get("options", {})
-    # excludeDuplicates
-    if options.get("excludeDuplicates"):
-        where_conditions.append("s.check_flag_2 = 0")
-    else:
-        where_conditions.append("s.check_flag_2 IN (0,1)")
-    # excludeShortLengths
-    if options.get("excludeShortLengths"):
-        where_conditions.append("s.check_flag_3 = 0")
-    else:
-        where_conditions.append("s.check_flag_3 IN (0,1)")
-    # hybrids (ternary)
-    if options.get("hybrids") == "hybrid":
-        where_conditions.append("s.check_flag_4 = 1")
-    elif options.get("hybrids") == "nohybrid":
-        where_conditions.append("s.check_flag_4 = 0")
-    else:
-        where_conditions.append("s.check_flag_4 IN (0,1)")
-    # excludeMisclassified
-    if options.get("excludeMisclassified"):
-        where_conditions.append("s.check_flag_15 = 0")
-    else:
-        where_conditions.append("s.check_flag_15 IN (0,1)")
-
     # === Taxonomy filters ===
     if data.get("taxonomy"):
         from collections import defaultdict
@@ -170,7 +145,7 @@ def build_sql_from_data(data, limit=None, return_count=False):
             minLat, maxLat = box["minLat"], box["maxLat"]
             minLng, maxLng = box["minLng"], box["maxLng"]
             subqueries.append(f"""
-                SELECT DISTINCT gbif_key FROM species_rtree
+                SELECT gbif_key FROM species_rtree
                 WHERE maxX >= {minLng} AND minX <= {maxLng}
                   AND maxY >= {minLat} AND minY <= {maxLat}
             """)
@@ -199,6 +174,23 @@ def build_sql_from_data(data, limit=None, return_count=False):
     else:
         sequence_col = "s.nuc_raw AS sequence"
 
+   # === Binary flag filters === --> ALWAYS PRESENT 
+    options = data.get("options", {})
+    # excludeDuplicates
+    if options.get("excludeDuplicates"):
+        where_conditions.append("s.check_flag_2 = 0")
+    # excludeShortLengths
+    if options.get("excludeShortLengths"):
+        where_conditions.append("s.check_flag_3 = 0")
+    # hybrids (ternary)
+    if options.get("hybrids") == "hybrid":
+        where_conditions.append("s.check_flag_4 = 1")
+    elif options.get("hybrids") == "nohybrid":
+        where_conditions.append("s.check_flag_4 = 0")
+    # excludeMisclassified
+    if options.get("excludeMisclassified"):
+        where_conditions.append("s.check_flag_15 = 0")
+
 
     # === Final WHERE clause ===
     where_clause = " AND ".join(where_conditions) if where_conditions else "1=1"
@@ -206,7 +198,7 @@ def build_sql_from_data(data, limit=None, return_count=False):
     # === Assemble SQL ===
     select_cols = metadata_cols + [sequence_col]
     sql = f"""
-    SELECT DISTINCT {', '.join(select_cols)}
+    SELECT {', '.join(select_cols)}
     FROM specimen s
     {' '.join(joins)}
     WHERE {where_clause}
@@ -220,7 +212,7 @@ def build_sql_from_data(data, limit=None, return_count=False):
 
     if return_count:
         count_sql = f"""
-        SELECT DISTINCT s.specimenid
+        SELECT s.specimenid
         FROM specimen s
         {' '.join(joins)}
         WHERE {where_clause}
