@@ -1,18 +1,22 @@
-from fastapi import FastAPI, Request, Query
-from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, StreamingResponse   # ← add this line
-from pathlib import Path
-import sqlite3
-import io
 import csv
+import io
+from pathlib import Path
 
-
+import duckdb
+from fastapi import FastAPI, Query, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import (  # ← add this line
+    FileResponse,
+    JSONResponse,
+    PlainTextResponse,
+    StreamingResponse,
+)
+from fastapi.staticfiles import StaticFiles
 
 DATA_DIR = Path(__file__).parent / "data"
 DB_PATH = DATA_DIR / "final_bold_7_Nov.db"
-LINEAGE_JSON = DATA_DIR / "lineage_bold._Nov-7.json" # the taxonomy data
-COUNTRIES_CSV = DATA_DIR / "unique_countries_Nov-7.csv" # the taxonomy data
+LINEAGE_JSON = DATA_DIR / "lineage_bold._Nov-7.json"  # the taxonomy data
+COUNTRIES_CSV = DATA_DIR / "unique_countries_Nov-7.csv"  # the taxonomy data
 
 app = FastAPI()
 
@@ -23,34 +27,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-def query_db_old(sql):
-    con = sqlite3.connect(DB_PATH)
-    cur = con.cursor()
-    cur.execute(sql)
-    rows = cur.fetchall()
-    con.close()
-    return rows
 
 def query_db(sql):
-    con = sqlite3.connect(DB_PATH)
-    con.row_factory = sqlite3.Row  # <-- gives access to column names
-    cur = con.cursor()
-    cur.execute(sql)
-    rows = cur.fetchall()
-    con.close()
-    return rows
+    return duckdb.sql(sql).pl()
+
 
 @app.get("/api/testdb")
 def test_db():
     try:
-        con = sqlite3.connect(DB_PATH)
-        cur = con.cursor()
-        cur.execute("SELECT COUNT(*) FROM specimen;")
-        count = cur.fetchone()[0]
-        con.close()
+        count = duckdb.sql("SELECT COUNT(*) FROM 'data/specimen.parquet'").fetchall()[0][0]
         return {"status": "ok", "rows_in_specimen": count}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
 
 @app.get("/api/taxonomy_json")
 def get_taxonomy_json():
@@ -66,13 +55,15 @@ def get_countries_csv():
         return FileResponse(COUNTRIES_CSV, media_type="text/csv", filename="unique_countries.csv")
     return {"error": "COUNTRIES CSV file not found"}
 
+
 #########################################################################################
 # THIS FUNCTION BUILDS A SQL QUERY BASED ON FRONTEND INPUT SEND IN JSON FORMAT. COOL ####
 #########################################################################################
 
 # Maximum number of rows to fetch when probing total count
-MAX_COUNT_ROWS = 10_001        # query limit
+MAX_COUNT_ROWS = 10_001  # query limit
 DISPLAY_COUNT_CAP = MAX_COUNT_ROWS - 1  # if more than this, show ">CAP"
+
 
 def build_sql_from_data(data, limit=None, return_count=False):
     """
@@ -81,8 +72,15 @@ def build_sql_from_data(data, limit=None, return_count=False):
     """
 
     metadata_cols = [
-        "s.specimenid", "s.taxon_kingdom", "s.taxon_phylum", "s.taxon_class", "s.taxon_order",
-        "s.taxon_family", "s.taxon_genus", "s.taxon_species", "s.identification_rank"
+        "s.specimenid",
+        "s.taxon_kingdom",
+        "s.taxon_phylum",
+        "s.taxon_class",
+        "s.taxon_order",
+        "s.taxon_family",
+        "s.taxon_genus",
+        "s.taxon_species",
+        "s.identification_rank",
     ]
 
     joins = []
@@ -114,6 +112,7 @@ def build_sql_from_data(data, limit=None, return_count=False):
     # === Taxonomy filters ===
     if data.get("taxonomy"):
         from collections import defaultdict
+
         taxa_by_rank = defaultdict(list)
         for t in data["taxonomy"]:
             taxa_by_rank[t["rank"]].append(t["name"])
@@ -127,14 +126,14 @@ def build_sql_from_data(data, limit=None, return_count=False):
     if data.get("countries"):
         countries = [c.upper() for c in data["countries"]]
         country_list = "', '".join(countries)
-        joins.append(f"JOIN species_countries sc ON sc.gbif_key = s.gbif_key")
+        joins.append("JOIN 'data/species_countries.parquet' sc ON sc.gbif_key = s.gbif_key")
         where_conditions.append(f"sc.country_code IN ('{country_list}')")
 
     # === Climate filter (JOIN) ===
     if data.get("climates"):
         zones = [z.lower() for z in data["climates"]]
         zone_list = "', '".join(zones)
-        joins.append(f"JOIN species_zones sz ON sz.gbif_key = s.gbif_key")
+        joins.append("JOIN 'data/species_zones.parquet' sz ON sz.gbif_key = s.gbif_key")
         where_conditions.append(f"sz.zone IN ('{zone_list}')")
 
     # === Bounding boxes (R-tree optimized query) ===
@@ -145,9 +144,9 @@ def build_sql_from_data(data, limit=None, return_count=False):
             minLat, maxLat = box["minLat"], box["maxLat"]
             minLng, maxLng = box["minLng"], box["maxLng"]
             subqueries.append(f"""
-                SELECT gbif_key FROM species_rtree
-                WHERE maxX >= {minLng} AND minX <= {maxLng}
-                  AND maxY >= {minLat} AND minY <= {maxLat}
+                SELECT gbif_key FROM 'data/species_locations.parquet' loc
+                WHERE longitude >= {minLng} AND longitude <= {maxLng}
+                  AND latitude >= {minLat} AND latitude <= {maxLat}
             """)
         combined_subquery = " UNION ALL ".join(subqueries)
         where_conditions.append(f"s.gbif_key IN ({combined_subquery})")
@@ -162,19 +161,16 @@ def build_sql_from_data(data, limit=None, return_count=False):
         primers = data.get("sequence", {}).get("primers", {})
         fwd = primers.get("forward", "")
         rev = primers.get("reverse", "")
-        joins.append(f"""
-        JOIN primer_pairs p
+        joins.append("""
+        JOIN 'data/primer_pairs.parquet' p
           ON p.specimenid = s.specimenid
         """)
-        where_conditions.extend([
-            f"p.forward_match_id = '{fwd}'",
-            f"p.reverse_match_id = '{rev}'"
-        ])
+        where_conditions.extend([f"p.forward_match_id = '{fwd}'", f"p.reverse_match_id = '{rev}'"])
         sequence_col = "p.inter_primer_sequence AS sequence"
     else:
         sequence_col = "s.nuc_raw AS sequence"
 
-   # === Binary flag filters === --> ALWAYS PRESENT 
+    # === Binary flag filters === --> ALWAYS PRESENT
     options = data.get("options", {})
     # excludeDuplicates
     if options.get("excludeDuplicates"):
@@ -191,16 +187,15 @@ def build_sql_from_data(data, limit=None, return_count=False):
     if options.get("excludeMisclassified"):
         where_conditions.append("s.check_flag_15 = 0")
 
-
     # === Final WHERE clause ===
     where_clause = " AND ".join(where_conditions) if where_conditions else "1=1"
 
     # === Assemble SQL ===
     select_cols = metadata_cols + [sequence_col]
     sql = f"""
-    SELECT {', '.join(select_cols)}
-    FROM specimen s
-    {' '.join(joins)}
+    SELECT {", ".join(select_cols)}
+    FROM 'data/specimen.parquet' s
+    {" ".join(joins)}
     WHERE {where_clause}
     """
     if limit:
@@ -213,36 +208,40 @@ def build_sql_from_data(data, limit=None, return_count=False):
     if return_count:
         count_sql = f"""
         SELECT s.specimenid
-        FROM specimen s
-        {' '.join(joins)}
+        FROM 'data/specimen.parquet' s
+        {" ".join(joins)}
         WHERE {where_clause}
         LIMIT {MAX_COUNT_ROWS};
         """
         count_rows = len(query_db(count_sql))
         if count_rows > DISPLAY_COUNT_CAP:
-          total_count = f">{DISPLAY_COUNT_CAP}"
+            total_count = f">{DISPLAY_COUNT_CAP}"
         else:
-          total_count = str(count_rows)
+            total_count = str(count_rows)
 
     return sql, rows, total_count
+
 
 @app.post("/api/build_query")
 async def build_query(request: Request):
     data = await request.json()
 
     # Get first 100 rows + total count in two optimized queries
-    sql, rows, total_count = build_sql_from_data(data, limit=100, return_count=True)
+    sql, df, total_count = build_sql_from_data(data, limit=100, return_count=True)
 
-    row_dicts = [dict(r) for r in rows]
+    row_dicts = df.to_dicts()
     columns = list(row_dicts[0].keys()) if row_dicts else []
 
-    return JSONResponse({
-        "sql": sql,
-        "nbrows": len(row_dicts),
-        "total_count": total_count,
-        "columns": columns,
-        "results": row_dicts
-    })
+    return JSONResponse(
+        {
+            "sql": sql,
+            "nbrows": len(row_dicts),
+            "total_count": total_count,
+            "columns": columns,
+            "results": row_dicts,
+        }
+    )
+
 
 @app.post("/api/export_query")
 async def export_query(request: Request, format: str = Query("json")):
@@ -266,7 +265,7 @@ async def export_query(request: Request, format: str = Query("json")):
         return StreamingResponse(
             output,
             media_type="text/tab-separated-values",
-            headers={"Content-Disposition": "attachment; filename=export.tsv"}
+            headers={"Content-Disposition": "attachment; filename=export.tsv"},
         )
 
     elif format == "fasta":
@@ -281,12 +280,11 @@ async def export_query(request: Request, format: str = Query("json")):
         return StreamingResponse(
             output,
             media_type="text/plain",
-            headers={"Content-Disposition": "attachment; filename=export.fasta"}
+            headers={"Content-Disposition": "attachment; filename=export.fasta"},
         )
 
     else:
         return JSONResponse({"error": f"Unknown format: {format}"})
-
 
 
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
