@@ -208,3 +208,26 @@ color: #ff0000;
   50% { width: 100%; }
   100% { width: 0%; }
 }
+
+/* Info icon styling */
+.info-icon {
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #2b2b2b; /* Bootstrap secondary gray */
+  user-select: none;
+}
+.info-icon:hover {
+  color: rgb(183 112 32); /* darker on hover */
+}
+
+/* Make all popovers wider */
+.popover {
+  max-width: 400px;      /* default 276px */
+  font-size: 0.95rem;    /* slightly smaller font if desired */
+}
+
+.popover-header {
+  font-weight: bold;             /* make text bold */
+  background-color: #ee9127;     /* amber background */
+  color: white;                  /* text color */
+}

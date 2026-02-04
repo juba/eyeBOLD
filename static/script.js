@@ -285,12 +285,14 @@ document.addEventListener("DOMContentLoaded", () => {
       resetResultsView();
     }
   });
-
   document.addEventListener("click", (e) => {
     if (e.target.matches("button") && !e.target.classList.contains("no-reset")) {
       resetResultsView();
     }
   });
+  // --- Enable Bootstrap popovers ---
+  const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+  popoverTriggerList.forEach(el => new bootstrap.Popover(el));
 });
 
 
