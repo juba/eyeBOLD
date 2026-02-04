@@ -91,6 +91,9 @@ table {
   color: #fff;
   border-color: #ee9127;
 }
+.btn:disabled {
+  background-color: #e9e9e9;
+}
 
 
 /* Hide default indeterminate style */
@@ -127,7 +130,6 @@ input[type="checkbox"].form-check-input:indeterminate::after {
   transform: scale(1.2); /* simulate bold */
 }
 
-/* Full-page overlay for exports */
 #export-overlay {
   display: none;               /* hidden by default */
   position: fixed;
@@ -137,14 +139,22 @@ input[type="checkbox"].form-check-input:indeterminate::after {
   height: 100%;
   background: rgba(0, 0, 0, 0.5); /* semi-transparent black */
   z-index: 1050;               /* above most elements */
-  justify-content: center;
-  align-items: center;
-  
+
+  display: flex;               /* ← add this */
+  flex-direction: column;      /* stack children vertically */
+  justify-content: center;     /* center vertically */
+  align-items: center;         /* center horizontally */
+
   color: white;
   font-size: 1.5rem;
   font-weight: bold;
   text-align: center;
   pointer-events: auto;        /* block interactions below */
+}
+
+#export-overlay .small-text {
+  font-size: 0.9rem;    /* smaller than main overlay font */
+  font-weight: normal;  /* optional: lighter than bold */
 }
 
 /* Optional: spinner using Bootstrap or custom */
@@ -164,3 +174,37 @@ input[type="checkbox"].form-check-input:indeterminate::after {
   color: rgb(183 112 32);
 }
 
+/* Spinner overlay for #run button */
+#stop-run {
+color: #ff0000;
+}
+
+#run {
+  position: relative;      /* needed for spinner overlay */
+  overflow: hidden;        /* hide overflow */
+}
+
+#run .btn-spinner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0%;               /* start from 0 */
+  height: 100%;
+  background: #ee9127; /* subtle amber fill, adjust opacity */
+  z-index: 1;              /* behind text */
+  pointer-events: none;
+  animation: btn-fill 1.5s linear infinite;
+}
+
+/* Keep text always on top */
+#run .btn-text {
+  position: relative;
+  z-index: 2;
+}
+
+/* Animate width from 0 → 100% in loop */
+@keyframes btn-fill {
+  0% { width: 0%; }
+  50% { width: 100%; }
+  100% { width: 0%; }
+}

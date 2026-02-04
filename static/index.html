@@ -178,10 +178,10 @@
               <label class="form-check-label" for="optMisclassified">Exclude misclassified</label>
             </div>
 
-            <div class="form-check mb-2">
+            <!-- <div class="form-check mb-2">
               <input class="form-check-input" type="checkbox" id="optCheckedLoc">
               <label class="form-check-label" for="optCheckedLoc">Checked locations only</label>
-            </div>
+            </div> -->
 
             <div class="mb-3 d-flex align-items-center">
               <label class="form-label mb-0 me-2">Hybrids:</label>
@@ -229,40 +229,61 @@
         </div> -->
     
         <!-- Run query button -->
-        <button id="run" class="btn btn-primary">Run Query</button>
+        <button id="run" class="btn btn-primary">
+          <span class="btn-text">Run query</span>
+          <span class="btn-spinner" hidden></span>
+        </button>
+        <button id="stop-run" class="btn btn-secondary" hidden>Stop</button>
+      </div>
+    </div>
+<!-- RESULTS PANEL -->
+<div class="card mb-3 border-secondary shadow-sm">
+  <div id="result-header" class="card-header fw-bold text-white bg-secondary">
+    RESULTS
+  </div>
+  <div class="card-body" style="padding-top: 0;">
+    <div id="query-debug-toggle" style="cursor: pointer; color: #6c757d; font-size: 0.85rem;">
+      query details ⏷
+    </div>
+    <div id="query-debug-content" style="display: none; background-color: #f8f9fa; border: 1px solid #ddd; border-radius: 4px; padding: 8px; margin-top: 4px; font-size: 0.8rem;">
+      <div id="status" class="text-muted mb-2"></div>
+      <div>
+        Object built and sent to server:
+        <pre id="debug-query-json-sent" class="text-muted mb-0" style="white-space: pre-wrap;">No object built and sent yet.</pre>
+      </div>
+      <div style="margin-top: 6px;">
+        SQL query built by server:
+        <pre id="debug-query" class="text-muted mb-0" style="white-space: pre-wrap;">No query built yet.</pre>
       </div>
     </div>
 
-    <!-- RESULTS PANEL -->
-    <div class="card mb-3 border-secondary shadow-sm">
-      <div id="result-header" class="card-header fw-bold text-white bg-secondary">
-        RESULTS
-      </div>
-      <div class="card-body">
-        <div id="query-results-container" class="mt-3">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <div id="results-count" class="fw-bold">No results yet</div>
-            <div>
-              <button id="export-json" class="btn btn-sm btn-outline-secondary export-btn no-reset" data-format="json" disabled>Export JSON</button>
-              <button id="export-tsv"  class="btn btn-sm btn-outline-secondary export-btn no-reset" data-format="tsv" disabled>Export TSV</button>
-              <button id="export-fasta" class="btn btn-sm btn-outline-secondary export-btn no-reset" data-format="fasta" disabled>Export FASTA</button>
-            </div>
-          </div>
-        
-          <div class="table-responsive">
-            <table id="results-table" class="table table-sm table-striped table-bordered">
-              <thead>
-                <tr id="results-thead"></tr>
-              </thead>
-              <tbody id="results-tbody"></tbody>
-            </table>
-          </div>
+    <div id="query-results-container" class="mt-3">
+      <!-- Collapsible Debug Section -->
+      <!-- Results count and export buttons -->
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <div id="results-count" class="fw-bold">No results yet</div>
+        <div>
+          <button id="export-json" class="btn btn-sm btn-outline-secondary export-btn no-reset" data-format="json" disabled>Export JSON</button>
+          <button id="export-tsv"  class="btn btn-sm btn-outline-secondary export-btn no-reset" data-format="tsv" disabled>Export TSV</button>
+          <button id="export-fasta" class="btn btn-sm btn-outline-secondary export-btn no-reset" data-format="fasta" disabled>Export FASTA</button>
         </div>
       </div>
-    </div>  
+
+      <!-- Table -->
+      <div class="table-responsive">
+        <table id="results-table" class="table table-sm table-striped table-bordered">
+          <thead>
+            <tr id="results-thead"></tr>
+          </thead>
+          <tbody id="results-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
 
     <!-- DEBUG PANEL -->
-    <div class="card-body">
+    <!-- <div class="card-body">
     <div id="debug-panel" class="container my-3">
       <div class="card border-warning">
         <div class="card-header bg-warning text-dark fw-bold">
@@ -280,7 +301,7 @@
           </pre>
         </div>
       </div>
-    </div>
+    </div> -->
 
     <!-- Citation Modal -->
     <div class="modal fade" id="citationModal" tabindex="-1" aria-labelledby="citationModalLabel" aria-hidden="true">
@@ -343,11 +364,26 @@
     </div>
     
 
-    <div id="export-overlay">
-      Exporting... 
-      <span class="spinner-border spinner-border-sm" role="status"></span>
-    </div>
 
+    <!-- <div id="export-overlay">
+      Exporting... 
+      <br>
+      <button id="stop-export" class="btn btn-danger btn-sm" style="color:red;">Stop Export</button>
+    </div>
+ -->
+    <div id="export-overlay" style="display:none; text-align:center; padding:1rem;">
+      <div id="export-status">
+        Exporting... <span class="spinner-border spinner-border-sm" role="status"></span>
+      </div>
+      <div>
+        <span class="small-text">This may take up to 40 seconds depending on the size of your results</span>
+        <br>
+        <span class="small-text">Time elapsed: <span id="export-time">0</span> seconds</span>
+      </div>
+      <div>
+        <button id="stop-export" class="btn btn-danger btn-sm">Stop Export</button>
+      </div>
+    </div>
 
 
   <script src="script.js"></script>

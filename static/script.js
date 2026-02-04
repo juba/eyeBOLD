@@ -1,5 +1,7 @@
 let lastData = []; // store last query for export
 const MAX_DISPLAY_ROWS = 100000; // maximum number of rows to test for. If more rows than this numbers are t be returned by the query, it will be written: "More than 100000 rows found" instead of the actual number.
+let currentQueryController = null; // to manage aborting previous requests
+let exportAbortController = null;  // to abort export fetch
 
 async function runTest() {
   document.getElementById("status").textContent = "Building query...";
@@ -33,9 +35,23 @@ async function runTest() {
 }
 
 async function runQuery() {
+  //deal with aborting previous request if any
+  if (currentQueryController) {
+    currentQueryController.abort();
+  }
+  currentQueryController = new AbortController();
+  const signal = currentQueryController.signal;
+
+
   // UI feedback
   const statusEl = document.getElementById("status");
+  //start loading 
   statusEl.textContent = "Running query...";
+  setRunButtonLoading(true);
+
+ // Clear previous results and debug
+  resetResultsView();
+  resetDebugView();
 
   const currentState = getCurrentQueryState();
   console.log("currentState")
@@ -45,7 +61,8 @@ async function runQuery() {
     const res = await fetch("/api/build_query", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(currentState)
+      body: JSON.stringify(currentState),
+      signal
     });
 
     if (!res.ok) throw new Error(`Server error: ${res.status}`);
@@ -77,12 +94,19 @@ async function runQuery() {
     document.getElementById("export-fasta").disabled = false;
 
     statusEl.textContent = `Query OK — showing ${rows.length} rows (total ${totalCount})`;
+
   } catch (err) {
-    console.error(err);
-    document.getElementById("status").textContent = "Error running query.";
-    document.getElementById("results-count").textContent = "Error";
-    document.getElementById("results-thead").innerHTML = "";
-    document.getElementById("results-tbody").innerHTML = "";
+    if (err.name === "AbortError") {
+      console.log("Query aborted by user");
+      statusEl.textContent = "Query aborted";
+    } else {
+      console.error(err);
+      statusEl.textContent = "Query error: " + err.message;
+    }
+  } finally {
+    /** ALWAYS restore button **/
+   setRunButtonLoading(false);
+   currentQueryController = null;
   }
 }
 
@@ -148,6 +172,15 @@ function resetResultsView() {
   // Change the class of the result-header div
   document.getElementById("result-header").classList.remove("bg-success");
   document.getElementById("result-header").classList.add("bg-secondary");
+
+  // reset debug info as well
+  resetDebugView();
+}
+function resetDebugView() {
+  // Clear all
+  document.getElementById("status").textContent = "";
+  document.getElementById("debug-query").textContent = "No object built and sent yet.";
+  document.getElementById("debug-query-json-sent").textContent = "No query built yet.";
 }
 
 
@@ -267,6 +300,46 @@ document.getElementById("run").addEventListener("click", runQuery);
 
 const overlay = document.getElementById("export-overlay");
 
+// document.querySelectorAll(".export-btn").forEach(btn => {
+//   btn.addEventListener("click", async () => {
+//     const format = btn.dataset.format;
+
+//     try {
+//       // Show overlay
+//       overlay.style.display = "flex";
+
+//       const queryData = getCurrentQueryState();
+
+//       const res = await fetch(`/api/export_query?format=${format}`, {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify(queryData)
+//       });
+
+//       if (!res.ok) throw new Error(`Export failed: ${res.status}`);
+
+//       const blob = await res.blob();
+//       const url = window.URL.createObjectURL(blob);
+//       const a = document.createElement("a");
+//       a.href = url;
+
+//       let filename = `export.${format}`;
+//       a.download = filename;
+//       document.body.appendChild(a);
+//       a.click();
+//       a.remove();
+//       window.URL.revokeObjectURL(url);
+
+//     } catch (err) {
+//       console.error(err);
+//       alert("Export failed. See console for details.");
+//     } finally {
+//       // Hide overlay
+//       overlay.style.display = "none";
+//     }
+//   });
+// });
+
 document.querySelectorAll(".export-btn").forEach(btn => {
   btn.addEventListener("click", async () => {
     const format = btn.dataset.format;
@@ -274,13 +347,19 @@ document.querySelectorAll(".export-btn").forEach(btn => {
     try {
       // Show overlay
       overlay.style.display = "flex";
+      startExportTimer();
+
+      // Create a new abort controller for this export
+      exportAbortController = new AbortController();
+      const signal = exportAbortController.signal;
 
       const queryData = getCurrentQueryState();
 
       const res = await fetch(`/api/export_query?format=${format}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(queryData)
+        body: JSON.stringify(queryData),
+        signal
       });
 
       if (!res.ok) throw new Error(`Export failed: ${res.status}`);
@@ -289,21 +368,92 @@ document.querySelectorAll(".export-btn").forEach(btn => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-
-      let filename = `export.${format}`;
-      a.download = filename;
+      a.download = `export.${format}`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
 
     } catch (err) {
-      console.error(err);
-      alert("Export failed. See console for details.");
+      if (err.name === 'AbortError') {
+        console.log("Export aborted by user");
+        alert("Export cancelled.");
+      } else {
+        console.error(err);
+        alert("Export failed. See console for details.");
+      }
     } finally {
-      // Hide overlay
       overlay.style.display = "none";
+      exportAbortController = null;
+      stopExportTimer();
     }
   });
 });
 
+
+
+function setRunButtonLoading(isLoading) {
+  const btn = document.getElementById("run");
+  const spinner = btn.querySelector(".btn-spinner");
+  const text = btn.querySelector(".btn-text");
+  const stopbtn = document.getElementById("stop-run");
+
+  if (isLoading) {
+    spinner.hidden = false;
+    text.textContent = "Running…";  // change text
+    btn.disabled = true;
+    stopbtn.hidden = false;
+  } else {
+    spinner.hidden = true;
+    text.textContent = "Run query"; // restore text
+    btn.disabled = false;
+    stopbtn.hidden = true;
+
+  }
+}
+
+document.getElementById("stop-run").addEventListener("click", () => {
+  if (currentQueryController) {
+    currentQueryController.abort();
+  }
+});
+
+document.getElementById("stop-export").addEventListener("click", () => {
+  if (exportAbortController) {
+    exportAbortController.abort();
+  }
+});
+
+document.getElementById("query-debug-toggle").addEventListener("click", () => {
+  const content = document.getElementById("query-debug-content");
+  const toggle = document.getElementById("query-debug-toggle");
+
+  if (content.style.display === "none") {
+    content.style.display = "block";
+    toggle.textContent = "query details ⏶"; // change arrow
+  } else {
+    content.style.display = "none";
+    toggle.textContent = "query details ⏷"; // change arrow
+  }
+});
+
+//Elapsed time counter for export
+let exportTimer = null;
+let exportSeconds = 0;
+
+function startExportTimer() {
+  exportSeconds = 0;
+  document.getElementById("export-time").textContent = exportSeconds;
+  
+  exportTimer = setInterval(() => {
+    exportSeconds++;
+    document.getElementById("export-time").textContent = exportSeconds;
+  }, 1000);
+}
+
+function stopExportTimer() {
+  if (exportTimer) {
+    clearInterval(exportTimer);
+    exportTimer = null;
+  }
+}

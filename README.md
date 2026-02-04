@@ -55,7 +55,8 @@ CREATE INDEX IF NOT EXISTS idx_species_zones_key_zone ON species_zones(gbif_key,
 ## TODO list / new functionalities
 - [x] write clean code to extract taxonomy from db and write it in json
 - [x] write clean code toextract countries from db and format it into a json
-- [ ] idem for climatic zones
+- [x] idem for climatic zones
+- [ ] Choose what to do with the countries and zones. SHould we only let users select within countries and zones having data in it or in all the existing list of countries and zones? I prefer the second solution. 
 - [x] Add continent info somewhere to help organize countries better
 - [x] Add search bar for taxo
 
