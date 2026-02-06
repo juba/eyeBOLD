@@ -1,0 +1,6 @@
+data/
+notebooks/
+.kopiaignore
+__pycache__
+.venv/
+sync_dev.sh
