@@ -23,9 +23,8 @@
         <span style="color: black;">eye</span><span style="color: #ee9127;">BOLD</span>
       </a>
       <div class="d-flex gap-3">
-        <a class="nav-link" href="https://github.com/damiendevienne/eyeBOLD/" target="_blank">Code on GitHub</a>
+        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#AboutModal">About</a>
         <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#citationModal">Citation</a>
-        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#licenseModal">License</a>
         <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#helpModal">Help</a>
       </div>
     </div>
@@ -361,21 +360,79 @@
       </div>
     </div>
 
-    <!-- License Modal -->
-    <div class="modal fade" id="licenseModal" tabindex="-1" aria-labelledby="licenseModalLabel" aria-hidden="true">
+    <!-- About Modal -->
+    <div class="modal fade" id="AboutModal" tabindex="-1" aria-labelledby="AboutModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header bg-light text-dark">
-            <h5 class="modal-title" id="licenseModalLabel">License</h5>
+            <h5 class="modal-title" id="AboutModalLabel">About eyeBOLD</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <p>eyeBOLD is released under the MIT License.</p>
-            <pre>
-              Permission is hereby granted, free of charge, to any person obtaining a copy
-              of this software and associated documentation files (the "Software"), to deal
-              in the Software without restriction...
-            </pre>
+            <!-- Description -->
+            <section class="mb-4">
+              <h5 class="fw-bold">What is eyeBOLD?</h5>
+              <p>
+                eyeBOLD is a user-friendly web interface for querying and exploring DNA barcoding data.
+                It integrates taxonomic, geographic, and sequence data to help researchers and educators
+                access and analyze biodiversity information effortlessly.
+              </p>
+            </section>
+
+            <!-- Data Sources -->
+            <section class="mb-4">
+              <h5 class="fw-bold">Data Sources</h5>
+              <p>
+                eyeBOLD aggregates data from:
+              </p>
+              <ul>
+                <li><strong>BOLD (Barcode of Life Data Systems)</strong>: The global repository for DNA barcoding data.</li>
+                <li><strong>GBIF (Global Biodiversity Information Facility)</strong>: Open-access biodiversity data from around the world.</li>
+              </ul>
+            </section>
+
+            <!-- License -->
+            <section class="mb-4">
+              <h5 class="fw-bold">License</h5>
+              <p>
+                eyeBOLD is released under the <strong>MIT License</strong>.
+              </p>
+              <pre class="bg-light p-3 rounded">
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software...
+              </pre>
+              <p>
+                The data itself is subject to the licenses of the original sources (BOLD, GBIF).
+              </p>
+            </section>
+
+            <!-- Team -->
+            <section class="mb-4">
+              <h5 class="fw-bold">Team</h5>
+              <p>
+                eyeBOLD is developed by a team of researchers and developers:
+              </p>
+              <ul>
+                <li><strong>Georgios Koutsovoulos</strong>: Initiator and project lead.</li>
+                <li><strong>Add People ! </strong>: ......</li>
+                <li><strong>Damien de Vienne</strong>: Front-end development and user experience.</li>
+                <li><strong>Julien Barnier</strong>: Back-end development and data integration.</li>
+              </ul>
+            </section>
+
+            <!-- Citation -->
+            <section class="mb-4">
+              <h5 class="fw-bold">Citation</h5>
+              <p>
+                If you use eyeBOLD in your research, please cite it as:
+              </p>
+              <pre class="bg-light p-3 rounded">
+                Authors list (2026). eyeBOLD: A user-friendly interface for DNA barcoding data exploration. [Journal/Repository info].
+              </pre>
+            </section>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -424,6 +481,26 @@
       </div>
     </div>
 
+<!-- Footer -->
+<footer class="bg-white py-2 mt-4 shadow-sm">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col text-center text-md-start">
+        <small class="text-muted">
+          &copy; 2026 eyeBOLD · ICS-FORTH · LBBE
+        </small>
+      </div>
+      <div class="col-auto d-flex gap-3">
+        <a href="https://github.com/damiendevienne/eyeBOLD/" class="text-decoration-none small text-muted" target="_blank">
+          <i class="bi bi-github me-1"></i> Code on GitHub
+        </a>
+        <a href="https://github.com/damiendevienne/eyeBOLD/issues" class="text-decoration-none small text-muted" target="_blank">
+          Report an issue
+        </a>
+      </div>
+    </div>
+  </div>
+</footer>
 
   <script src="script.js"></script>
   <script src="taxonomy.js"></script>  
