@@ -1,13 +1,14 @@
-/* body { 
-  font-family: system-ui, sans-serif; 
+/* body {
+  font-family: system-ui, sans-serif;
 } */
 
-table { 
-  font-size: 0.9rem; 
+table {
+  font-size: 0.9rem;
 }
 
-#countries-container, #climates-container {
-  max-height: 300px;       /* or any height you prefer */
+#countries-container,
+#climates-container {
+  max-height: 300px; /* or any height you prefer */
   overflow-y: auto;
   border: 1px solid #ddd;
   border-radius: 6px;
@@ -19,7 +20,6 @@ table {
   background-color: white;
   transition: background-color 0.2s ease;
 }
-
 
 .continent-block {
   /* padding: 6px; */
@@ -39,8 +39,6 @@ table {
   background-color: #e9f0fa;
   border: 1px solid #21588f;
 }
-
-
 
 /* ========================================================================== */
 /* ========================= Bootstrap Element Styling ======================= */
@@ -83,7 +81,7 @@ table {
 
 .btn:hover {
   background-color: #e9e9e9;
-  color:#333;
+  color: #333;
 }
 
 .btn.active {
@@ -95,17 +93,16 @@ table {
   background-color: #e9e9e9;
 }
 
-
 /* Hide default indeterminate style */
 input[type="checkbox"].form-check-input:indeterminate {
-  background-color: white;  /* keep box white */
+  background-color: white; /* keep box white */
   border: 1px solid #ee9127; /* keep border */
   position: relative;
 }
 
 /* Draw a small blue dot in the center */
 input[type="checkbox"].form-check-input:indeterminate::after {
-  content: '';
+  content: "";
   width: 4px;
   height: 4px;
   background-color: #ee9127; /* blue dot */
@@ -122,39 +119,47 @@ input[type="checkbox"].form-check-input:indeterminate::after {
 }
 
 .tax-inner {
-  transition: color 2.5s ease, transform 1.5s ease;
+  transition:
+    color 2.5s ease,
+    transform 1.5s ease;
 }
 
 .tax-inner.tax-highlight {
-  color: #ee9127;   /* highlight color */
+  color: #ee9127; /* highlight color */
   transform: scale(1.2); /* simulate bold */
 }
 
 #export-overlay {
-  display: none;               /* hidden by default */
+  display: none; /* hidden by default */
   position: fixed;
-  top: 0; 
+  top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.5); /* semi-transparent black */
-  z-index: 1050;               /* above most elements */
+  z-index: 1050; /* above most elements */
 
-  display: flex;               /* ← add this */
-  flex-direction: column;      /* stack children vertically */
-  justify-content: center;     /* center vertically */
-  align-items: center;         /* center horizontally */
+  display: flex; /* ← add this */
+  flex-direction: column; /* stack children vertically */
+  justify-content: center; /* center vertically */
+  align-items: center; /* center horizontally */
 
   color: white;
   font-size: 1.5rem;
   font-weight: bold;
   text-align: center;
-  pointer-events: auto;        /* block interactions below */
+  pointer-events: auto; /* block interactions below */
 }
 
 #export-overlay .small-text {
-  font-size: 0.9rem;    /* smaller than main overlay font */
-  font-weight: normal;  /* optional: lighter than bold */
+  font-size: 0.9rem; /* smaller than main overlay font */
+  font-weight: normal; /* optional: lighter than bold */
+}
+
+#export-overlay .progress-text {
+  margin-top: 0.8rem;
+  font-size: 1rem;
+  font-weight: bold;
 }
 
 /* Optional: spinner using Bootstrap or custom */
@@ -176,22 +181,22 @@ input[type="checkbox"].form-check-input:indeterminate::after {
 
 /* Spinner overlay for #run button */
 #stop-run {
-color: #ff0000;
+  color: #ff0000;
 }
 
 #run {
-  position: relative;      /* needed for spinner overlay */
-  overflow: hidden;        /* hide overflow */
+  position: relative; /* needed for spinner overlay */
+  overflow: hidden; /* hide overflow */
 }
 
 #run .btn-spinner {
   position: absolute;
   top: 0;
   left: 0;
-  width: 0%;               /* start from 0 */
+  width: 0%; /* start from 0 */
   height: 100%;
   background: #ee9127; /* subtle amber fill, adjust opacity */
-  z-index: 1;              /* behind text */
+  z-index: 1; /* behind text */
   pointer-events: none;
   animation: btn-fill 1.5s linear infinite;
 }
@@ -204,9 +209,15 @@ color: #ff0000;
 
 /* Animate width from 0 → 100% in loop */
 @keyframes btn-fill {
-  0% { width: 0%; }
-  50% { width: 100%; }
-  100% { width: 0%; }
+  0% {
+    width: 0%;
+  }
+  50% {
+    width: 100%;
+  }
+  100% {
+    width: 0%;
+  }
 }
 
 /* Info icon styling */
@@ -222,12 +233,12 @@ color: #ff0000;
 
 /* Make all popovers wider */
 .popover {
-  max-width: 400px;      /* default 276px */
-  font-size: 0.95rem;    /* slightly smaller font if desired */
+  max-width: 400px; /* default 276px */
+  font-size: 0.95rem; /* slightly smaller font if desired */
 }
 
 .popover-header {
-  font-weight: bold;             /* make text bold */
-  background-color: #ee9127;     /* amber background */
-  color: white;                  /* text color */
+  font-weight: bold; /* make text bold */
+  background-color: #ee9127; /* amber background */
+  color: white; /* text color */
 }

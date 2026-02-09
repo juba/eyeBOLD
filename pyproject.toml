@@ -1,0 +1,24 @@
+[project]
+name = "eyebold"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+  "duckdb>=1.4.4",
+  "fastapi>=0.128.0",
+  "numpy>=2.4.2",
+  "polars>=1.37.1",
+  "pyarrow>=23.0.0",
+  "sqlparse>=0.5.5",
+  "uvicorn>=0.40.0",
+]
+
+[dependency-groups]
+dev = [
+  "marimo>=0.19.8",
+  "pandas>=3.0.0",
+  "ruff>=0.14.14",
+  "sqlglot>=28.7.0",
+  "ty>=0.0.14",
+]

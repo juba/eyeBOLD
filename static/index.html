@@ -31,7 +31,7 @@
   </nav>
 
   <div class="container p-4">
-    <h2 class="mb-4">eyeBOLD Query Interface</h2>
+    <h2 class="mb-4"><strong>DuckDB version</strong> eyeBOLD Query Interface</h2>
     <div>
       <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
     </div>
@@ -39,8 +39,8 @@
     <div class="card mb-3">
       <div class="card-header fw-bold d-flex align-items-center justify-content-between">
         <span>
-          Taxonomy 
-          <small>(source: 
+          Taxonomy
+          <small>(source:
             <span class="dropdown">
               <a class="dropdown-toggle text-decoration-none" href="#" role="button" id="taxonomy-source-dropdown" data-bs-toggle="dropdown" aria-expanded="false">
                 gbif
@@ -50,7 +50,7 @@
                 <li><a class="dropdown-item" href="#" data-source="bold">bold</a></li>
               </ul>
             </span>
-          ) 
+          )
           </small>
           <span id="taxonomy-counter" class="text-muted" style="font-size: small;"></span>
           <span tabindex="0"
@@ -82,13 +82,13 @@
         <div class="mb-2">
           <input id="taxonomy-search" type="text" placeholder="Search taxonomy..." class="form-control form-control-sm">
         </div>
-        <div id="taxonomy-suggestions" class="list-group position-absolute" style="z-index: 10;"></div>      
+        <div id="taxonomy-suggestions" class="list-group position-absolute" style="z-index: 10;"></div>
         <div id="taxonomy-container"></div>
       </div>
     </div>
 
     <!-- GEOGRAPHY -->
-    <div class="card mb-3">  
+    <div class="card mb-3">
       <div class="card-header fw-bold">
         Geography <span id="geography-counter" class="text-muted" style="font-size: small;"></span>
         <span tabindex="0"
@@ -151,7 +151,7 @@
       </div>
       <div class="card-body">
         <div class="row">
-          
+
           <!-- LEFT BLOCK: SEQUENCE OPTIONS -->
           <div class="col-md-6">
             <h6 class="fw-bold mb-3 text-primary">Sequence options</h6>
@@ -209,7 +209,7 @@
             <div class="form-check mb-2">
               <input class="form-check-input" type="checkbox" id="optLength" checked>
               <label class="form-check-label" for="optLength">Exclude short-length sequences</label>
-            </div>            
+            </div>
 
             <div class="form-check mb-2">
               <input class="form-check-input" type="checkbox" id="optMisclassified" checked>
@@ -265,7 +265,7 @@
             <label class="form-check-label" for="outJSON">JSON</label>
           </div>
         </div> -->
-    
+
         <!-- Run query button -->
         <button id="run" class="btn btn-primary">
           <span class="btn-text">Run query</span>
@@ -450,7 +450,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <b>write</b> here all information to help users use the interface 
+            <b>write</b> here all information to help users use the interface
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -458,11 +458,11 @@
         </div>
       </div>
     </div>
-    
+
 
 
     <!-- <div id="export-overlay">
-      Exporting... 
+      Exporting...
       <br>
       <button id="stop-export" class="btn btn-danger btn-sm" style="color:red;">Stop Export</button>
     </div>
@@ -470,6 +470,9 @@
     <div id="export-overlay" style="display:none; text-align:center; padding:1rem;">
       <div id="export-status">
         Exporting... <span class="spinner-border spinner-border-sm" role="status"></span>
+      </div>
+      <div class="progress-text" id="export-progress">
+          <span id="export-progress-title"><strong>Running query...</strong></span><span id="export-progress-value"></span>
       </div>
       <div>
         <span class="small-text">This may take up to 40 seconds depending on the size of your results</span>
@@ -503,7 +506,7 @@
 </footer>
 
   <script src="script.js"></script>
-  <script src="taxonomy.js"></script>  
+  <script src="taxonomy.js"></script>
   <script type="module" src="geography.js"></script>
   <script src="options.js"></script>
   <script src="map.js"></script>
