@@ -21,10 +21,10 @@ table {
   transition: background-color 0.2s ease;
 }
 
-.continent-block {
-  /* padding: 6px; */
-  /* border-bottom: 1px solid #eee; */
-}
+/* .continent-block { */
+/* padding: 6px; */
+/* border-bottom: 1px solid #eee; */
+/* } */
 
 .continent-block:hover {
   background-color: #f3f3f3;
