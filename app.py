@@ -20,8 +20,9 @@ from fastapi.staticfiles import StaticFiles
 DATA_DIR = Path(__file__).parent / "data"
 LINEAGE_JSON = DATA_DIR / "lineage_bold._Nov-7.json"  # the taxonomy data
 COUNTRIES_CSV = DATA_DIR / "unique_countries_Nov-7.csv"  # the taxonomy data
+NUM_THREADS = 2
 
-duckdb_conn = duckdb.connect(config={"threads": 2})
+duckdb_conn = duckdb.connect(config={"threads": NUM_THREADS})
 
 app = FastAPI()
 
@@ -31,8 +32,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-config = {"threads": "1"}
 
 
 def query_db_pl(sql):
